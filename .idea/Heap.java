@@ -503,7 +503,7 @@ public class Heap
         }
 
         public HeapNode() {
-            this(null, null, null, null, null, false);
+            this(null, null, null, null, null, 0);
         }
     }
     
