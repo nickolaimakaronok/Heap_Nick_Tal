@@ -108,8 +108,8 @@ public class Heap
             do {
                 currentChild.parent = null; // Detach from the deleted node
 
-                if (currentChild.mark) { // Change Mark to unmarked(0)
-                    currentChild.mark = 0;
+                if (currentChild.mark) { // Change Mark to unmarked
+                    currentChild.mark = false;
                     this.markedNodes--;
                 }
 
@@ -200,7 +200,7 @@ public class Heap
 
         // Update Rank and State and linksCount
         x.rank++;
-        y.mark = 0; // Roots lose their mark when becoming children
+        y.mark = false; // Roots lose their mark when becoming children
         this.linksCount++;
     }
 
@@ -344,7 +344,70 @@ public class Heap
      */
     public void meld(Heap heap2)
     {
-        return;
+        // Checking if heap2 is empty or null
+        if (heap2 == null || heap2.min == null) {
+            return;
+        }
+        // Accumulating history statistics from heap2
+        // The melded heap inherits the history (links, cuts, costs) of the heaps that created it
+        this.linksCount += heap2.linksCount;
+        this.cutsCount += heap2.cutsCount;
+        this.heapifyCostCount += heap2.heapifyCostCount;
+
+        // Handling the case where the current heap (this) is empty.
+        // We take ownership of heap2's data.
+        if (this.min == null) {
+            this.min = heap2.min;
+            this.size = heap2.size;
+            this.numTrees = heap2.numTrees;
+            this.markedNodes = heap2.markedNodes;
+
+            // Clear heap2 so it is no longer usable (not neccessry)
+            heap2.min = null;
+            heap2.size = 0;
+            heap2.numTrees = 0;
+            heap2.markedNodes = 0;
+            heap2.linksCount = 0;
+            heap2.cutsCount = 0;
+            heap2.heapifyCostCount = 0;
+            return;
+        }
+        // Updating current structure counters (size, trees, marks).
+        this.size += heap2.size;
+        this.numTrees += heap2.numTrees;
+        this.markedNodes += heap2.markedNodes;
+
+        // Merging the two circular doubly linked lists
+        HeapNode min1 = this.min.node;       // Head of this list
+        HeapNode tail1 = min1.prev;          // Tail of this list
+        HeapNode min2 = heap2.min.node;      // Head of heap2 list
+        HeapNode tail2 = min2.prev;          // Tail of heap2 list
+
+        tail1.next = min2;
+        min2.prev = tail1;
+        tail2.next = min1;
+        min1.prev = tail2;
+
+        // Handling lazy vs. non-lazy logic
+        if (this.lazyMelds) {
+            // If lazy, we update the minimum pointer if heap2 has a smaller key.
+            if (heap2.min.key < this.min.key) {
+                this.min = heap2.min;
+            }
+        } else {
+            // If not lazy, we perform successive linking immediately
+            // This function updates this.min at the end
+            successiveLinking();
+        }
+
+        // Clearing heap2 to ensure it is no longer usable by the user
+        heap2.min = null;
+        heap2.size = 0;
+        heap2.numTrees = 0;
+        heap2.markedNodes = 0;
+        heap2.linksCount = 0;
+        heap2.cutsCount = 0;
+        heap2.heapifyCostCount = 0;
     }
     
     
@@ -377,7 +440,7 @@ public class Heap
      */
     public int numMarkedNodes()
     {
-        return this.numMarkedNodes;
+        return this.markedNodes;
     }
     
     
@@ -388,7 +451,7 @@ public class Heap
      */
     public int totalLinks()
     {
-        return this.totalLinks;
+        return this.linksCount;
     }
     
     
@@ -399,7 +462,7 @@ public class Heap
      */
     public int totalCuts()
     {
-        return this.totalCuts;
+        return this.cutsCount;
     }
     
 
@@ -424,7 +487,7 @@ public class Heap
         public HeapNode next;
         public HeapNode prev;
         public HeapNode parent;
-        public int mark;
+        public boolean mark;
         public int rank;
 
 
@@ -436,11 +499,11 @@ public class Heap
             this.prev = prev;
             this.parent = parent;
             this.rank = rank;
-            this.mark = 0;
+            this.mark = false;
         }
 
         public HeapNode() {
-            this(null, null, null, null, null, 0);
+            this(null, null, null, null, null, false);
         }
     }
     
@@ -462,7 +525,6 @@ public class Heap
         public HeapItem() {
             this(null, 0 , "");
         }
-
 
     }
 }
