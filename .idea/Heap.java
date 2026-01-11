@@ -321,9 +321,208 @@ public class Heap
      * 
      */
     public void decreaseKey(HeapItem x, int diff) 
-    {    
+    {
+        // Checking the rightness of input
+        if(x == null || x.node == null) {
+            return;
+        }
+
+        if(diff <= 0) {
+            return;
+        }
+
+        //Decreasing the key value
+        x.key -= diff;
+
+        //Updating minimum if needed
+        if(this.min == null || x.key < this.min.key) {
+            this.min = x;
+        }
+
+        //if lazyDecreaseKeys == false an then we do heapifyUp
+        //because we don't need to meld anything in decrease key without cutting we don't even check it (lazyMelds)
+
+
+        if(this.lazyDecreaseKeys == false) {
+            HeapNode node_x = x.node;
+            //heapifyUp by values and not nodes(so no million pointers changes needed)
+            while(node_x.parent != null && node_x.item.key < node_x.parent.item.key) {
+                swapItems(node_x, node_x.parent);
+                this.heapifyCostCount++;
+
+                //x had moved to its parent's node after saw so the node_x has to be updated to a new to x.node
+                node_x = x.node;
+            }
+
+            //maybe delete afterwards check if works without
+            if (this.min == null || x.key < this.min.key) {
+                this.min = x;
+            }
+
+            return;
+        }
+
+        //if lazyDecreaseKeys == true we do CUT and Cascading cut
+
+        HeapNode itemNode = x.node;
+        HeapNode parentNode = itemNode.parent;
+
+        if(parentNode != null && itemNode.item.key < parentNode.item.key) {
+
+            //we make a flag if our node's parent is a Root
+            boolean parentWasRootBeforeCut = (parentNode.parent == null);
+            cut(itemNode);
+            cascadingCut(parentNode, parentWasRootBeforeCut);
+        }
+
+        //maybe delete afterwards check if works without
+        if (this.min == null || x.key < this.min.key) {
+            this.min = x;
+        }
+
         return;
     }
+
+
+
+    //swapping two nodes according to the rules of FORUM
+    private void swapItems(HeapNode a, HeapNode b) {
+        HeapItem tmp = a.item;
+        a.item = b.item;
+        b.item = tmp;
+
+        if(a.item != null) {
+            a.item.node = a;
+        }
+        if(b.item != null) {
+            b.item.node = b;
+        }
+    }
+
+    //cut node v
+    private void cut(HeapNode cutNode) {
+        if(cutNode == null) {
+            return;
+        }
+
+        HeapNode parentNode = cutNode.parent;
+
+        if(parentNode == null) {
+            return; //already a root
+        }
+
+        // remove cutNode from parentNode's child list
+        if(cutNode.next == cutNode) {
+            // cutNode is an only child
+            parentNode.child = null;
+        } else {
+
+            // erasing from siblings ring
+            cutNode.prev.next = cutNode.next;
+            cutNode.next.prev = cutNode.prev;
+
+            // if parentNode.child pointed to cutNode then change it to a sibling
+            if(parentNode.child == cutNode) {
+                parentNode.child = cutNode.next;
+            }
+
+        }
+
+        // update rating
+        parentNode.rank--;
+
+        // detach cutNode
+        cutNode.parent = null;
+
+        // unmark cutNode when it becomes a root
+        if(cutNode.mark) {
+            cutNode.mark = false;
+            this.markedNodes--;
+        }
+
+        // cut counter update
+        this.cutsCount++;
+
+        // making a singleton circular list
+        cutNode.next = cutNode;
+        cutNode.prev = cutNode;
+
+        // add cutNode to root lst;
+
+        addRoot(cutNode);
+
+        if(this.lazyMelds == false) {
+            successiveLinking();
+        }
+    }
+
+    private void addRoot(HeapNode rootToAdd) {
+        if(rootToAdd == null) {
+            return;
+        }
+
+        if(this.min == null) {
+            this.min = rootToAdd.item;
+            rootToAdd.next = rootToAdd;
+            rootToAdd.prev = rootToAdd;
+            this.numTrees = 1;
+            return;
+        }
+
+        HeapNode rootListHead = this.min.node; //min easier to find could be anu node
+        HeapNode rootListTail = rootListHead.prev; //last root in teh circular list
+
+        //now we want to insert our new Root in between
+
+        rootListTail.next = rootToAdd;
+        rootToAdd.prev = rootListTail;
+
+        rootToAdd.next = rootListHead;
+        rootListHead.prev = rootToAdd;
+
+        this.numTrees++;
+
+        if(rootToAdd.item != null && rootToAdd.item.key < this.min.key) {
+            this.min = rootToAdd.item;
+        }
+
+    }
+
+
+    // we go all the way up until we see unmarked parent node
+    // also if the parent is root then we stop (the flag we created)
+
+
+    private void cascadingCut(HeapNode nodeThatLostChild, boolean wasRootWhenChildWasLost) {
+        if(nodeThatLostChild == null) {
+            return;
+        }
+
+        //if it was root and lost teh child we stop(roots are not marked/cut)
+        if(wasRootWhenChildWasLost) {
+            // make sure everything is ok
+            if(nodeThatLostChild.mark) {
+                nodeThatLostChild.mark = false;
+                this.markedNodes--;
+            }
+            return;
+        }
+
+        // Node was not a root and was not marked
+        if(nodeThatLostChild.mark == false) {
+            nodeThatLostChild.mark = true;
+            this.markedNodes++;
+            return;
+        }
+
+        // Node was already marked then we cut it and continue up
+        HeapNode parentOfNode = nodeThatLostChild.parent;
+        boolean parentWasRootWhenChildWasLost = (parentOfNode != null && parentOfNode.parent == null);
+        cut(nodeThatLostChild); //we cut the node if lost more than one child
+        cascadingCut(parentOfNode, parentWasRootWhenChildWasLost); //recursion going up and doing cascading cuts
+
+    }
+
 
     /**
      * 
@@ -331,7 +530,20 @@ public class Heap
      *
      */
     public void delete(HeapItem x) 
-    {    
+    {
+        //I assume that all value in Heaps are positive numbers or == 0 (written in forum)
+        if(x == null || this.min == null) {
+            return;
+        }
+        if(x == this.min) {
+            this.deleteMin();
+            return;
+        }
+
+        this.decreaseKey(x, x.key+1); //now it's negative and it should be the minimum since all non-negative
+
+        this.deleteMin();
+
         return;
     }
 
