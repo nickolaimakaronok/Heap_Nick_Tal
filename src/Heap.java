@@ -164,6 +164,10 @@ public class Heap
         nodeToDelete.child = null;
         nodeToDelete.parent = null;
 
+        if (nodeToDelete.item != null) {
+            nodeToDelete.item.node = null;
+        }
+
 
         // Consolidate the trees (Successive Linking)
         if (this.size > 0) {
@@ -334,10 +338,7 @@ public class Heap
         //Decreasing the key value
         x.key -= diff;
 
-        //Updating minimum if needed
-        if(this.min == null || x.key < this.min.key) {
-            this.min = x;
-        }
+
 
         //if lazyDecreaseKeys == false an then we do heapifyUp
         //because we don't need to meld anything in decrease key without cutting we don't even check it (lazyMelds)
@@ -354,7 +355,6 @@ public class Heap
                 node_x = x.node;
             }
 
-            //maybe delete afterwards check if works without
             if (this.min == null || x.key < this.min.key) {
                 this.min = x;
             }
@@ -375,12 +375,10 @@ public class Heap
             cascadingCut(parentNode, parentWasRootBeforeCut);
         }
 
-        //maybe delete afterwards check if works without
         if (this.min == null || x.key < this.min.key) {
             this.min = x;
         }
 
-        return;
     }
 
 
@@ -532,10 +530,19 @@ public class Heap
     public void delete(HeapItem x) 
     {
         //I assume that all value in Heaps are positive numbers or == 0 (written in forum)
-        if(x == null || this.min == null) {
+        if(x == null || this.min == null || x.node == null) {
             return;
         }
+
+
         if(x == this.min) {
+            this.deleteMin();
+            return;
+        }
+
+        if(x.key == Integer.MAX_VALUE) {
+            this.decreaseKey(x, Integer.MAX_VALUE);
+            this.decreaseKey(x, 1);
             this.deleteMin();
             return;
         }
@@ -544,7 +551,6 @@ public class Heap
 
         this.deleteMin();
 
-        return;
     }
 
 
