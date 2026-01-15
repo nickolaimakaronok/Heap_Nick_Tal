@@ -3,43 +3,48 @@ import java.util.Random;
 /**
  * HeapExperiments.java
  * DO NOT SUBMIT this file with Heap.java.
- * This is a standalone runner for the experimental section.
  *
- * It runs 3 experiments, for 4 heap types (controlled by lazyMelds / lazyDecreaseKeys),
- * and averages results over 20 runs.
+ * Runs the experimental section:
+ *  - 3 experiments
+ *  - 4 heap types (defined by lazyMelds / lazyDecreaseKeys)
+ *  - averages over RUNS permutations (default 20)
  *
- * Experiments (as in the assignment screenshots):
- *  Exp 1: insert n items (permutation of 1..n), then deleteMin once.
- *  Exp 2: insert n items, deleteMin once, then deleteMin until heap size becomes 46.
- *  Exp 3: insert n items, deleteMin once,
- *         then floor(0.1n) decreaseKey operations that reduce selected keys down to 0,
- *         then deleteMin once.
+ * Experiment definitions (per assignment):
+ *  Exp 1:
+ *    Insert keys 1..n (random permutation), then deleteMin once.
  *
- * Important:
- *  - Keys are positive initially (1..n).
- *  - In experiment 3 we reduce some keys from positive to 0.
- *  - One and the same set of permutations must be used for all heap types and experiments:
- *    we use seed = BASE_SEED + runIndex to generate the permutation for that runIndex,
- *    and reuse it everywhere.
+ *  Exp 2:
+ *    Insert keys 1..n (random permutation), deleteMin once,
+ *    then delete the MAXIMUM (using a pointer: HeapItem) until size becomes 46.
  *
- * Metrics (per the assignment table):
- *  - time (ms)
- *  - final heap size
- *  - final number of trees (numTrees)
- *  - total links
- *  - total cuts
- *  - total heapifyUp costs
- *  - max operation cost during the experiment:
- *      opCost = Δlinks + Δcuts + ΔheapifyUp  (delta per single operation)
+ *  Exp 3:
+ *    Insert keys 1..n (random permutation), deleteMin once,
+ *    then floor(0.1n) decreaseKey operations that reduce selected keys to 0,
+ *    then deleteMin once again.
+ *
+ * Metrics printed (for the assignment table):
+ *  - avgTimeMs
+ *  - avgFinalSize
+ *  - avgNumTrees
+ *  - avgLinks
+ *  - avgCuts
+ *  - avgHeapifyUp
+ *  - avgMaxOpCost
+ *
+ * Operation cost definition (per assignment):
+ *  cost(op) = Δlinks + Δcuts + ΔheapifyUp  (delta for that single operation)
+ *  maxOpCost = max cost(op) over all operations executed in that experiment run.
  */
 public class HeapExperiments {
 
-    // Default parameters (assignment uses n = 464,646)
     private static final int DEFAULT_N = 464_646;
     private static final int DEFAULT_RUNS = 20;
 
-    // Base seed so that permutations are reproducible across runs
+    // Same permutations across heap types and experiments (per runIndex)
     private static final long BASE_SEED = 20260115L;
+
+    // Exp2: target remaining size
+    private static final int EXP2_TARGET_REMAIN = 46;
 
     /** The 4 heap variants required by the assignment */
     private enum HeapType {
@@ -59,7 +64,7 @@ public class HeapExperiments {
 
     /** Per-run result (one run = one permutation) */
     private static final class RunStats {
-        long timeMs;
+        double timeMs;
         int finalSize;
         int finalNumTrees;
         long links;
@@ -68,15 +73,15 @@ public class HeapExperiments {
         long maxOpCost;
     }
 
-    /** Aggregator for averaging over runs */
+    /** Aggregator for averaging over runs (2 decimal places in output) */
     private static final class Agg {
-        long sumTimeMs = 0;
-        long sumFinalSize = 0;
-        long sumFinalNumTrees = 0;
-        long sumLinks = 0;
-        long sumCuts = 0;
-        long sumHeapify = 0;
-        long sumMaxOpCost = 0;
+        double sumTimeMs = 0;
+        double sumFinalSize = 0;
+        double sumFinalNumTrees = 0;
+        double sumLinks = 0;
+        double sumCuts = 0;
+        double sumHeapify = 0;
+        double sumMaxOpCost = 0;
         int count = 0;
 
         void add(RunStats s) {
@@ -91,16 +96,17 @@ public class HeapExperiments {
         }
 
         String avgLine() {
-            long avgTime = sumTimeMs / count;
-            long avgSize = sumFinalSize / count;
-            long avgTrees = sumFinalNumTrees / count;
-            long avgLinks = sumLinks / count;
-            long avgCuts = sumCuts / count;
-            long avgHeapify = sumHeapify / count;
-            long avgMaxCost = sumMaxOpCost / count;
+            if (count == 0) return "No runs";
+            double avgTime = sumTimeMs / count;
+            double avgSize = sumFinalSize / count;
+            double avgTrees = sumFinalNumTrees / count;
+            double avgLinks = sumLinks / count;
+            double avgCuts = sumCuts / count;
+            double avgHeapify = sumHeapify / count;
+            double avgMaxCost = sumMaxOpCost / count;
 
             return String.format(
-                    "avgTimeMs=%d | avgFinalSize=%d | avgNumTrees=%d | avgLinks=%d | avgCuts=%d | avgHeapifyUp=%d | avgMaxOpCost=%d",
+                    "avgTimeMs=%.2f | avgFinalSize=%.2f | avgNumTrees=%.2f | avgLinks=%.2f | avgCuts=%.2f | avgHeapifyUp=%.2f | avgMaxOpCost=%.2f",
                     avgTime, avgSize, avgTrees, avgLinks, avgCuts, avgHeapify, avgMaxCost
             );
         }
@@ -132,10 +138,9 @@ public class HeapExperiments {
             int[] perm = makePermutation(n, seed);
 
             for (int exp = 1; exp <= 3; exp++) {
-                for (int t = 0; t < HeapType.values().length; t++) {
-                    HeapType type = HeapType.values()[t];
+                for (HeapType type : HeapType.values()) {
                     RunStats s = runSingle(exp, type, perm);
-                    agg[exp - 1][t].add(s);
+                    agg[exp - 1][type.ordinal()].add(s);
                 }
             }
 
@@ -149,8 +154,6 @@ public class HeapExperiments {
                 System.out.println(type.name() + "  ->  " + agg[exp - 1][type.ordinal()].avgLine());
             }
         }
-
-        System.out.println("\nTip: First run with smaller n (e.g. 50000) to sanity-check, then switch to 464646.");
     }
 
     /**
@@ -161,9 +164,10 @@ public class HeapExperiments {
         int n = perm.length;
         Heap heap = new Heap(type.lazyMelds, type.lazyDecreaseKeys);
 
-        // For experiment 3 we must be able to access items by key quickly.
-        // We store the HeapItem returned by insert(key) at index [key].
-        Heap.HeapItem[] byKey = (experimentId == 3) ? new Heap.HeapItem[n + 1] : null;
+        // Need key -> HeapItem pointers for Exp2 and Exp3
+        Heap.HeapItem[] byKey = (experimentId == 2 || experimentId == 3)
+                ? new Heap.HeapItem[n + 1]
+                : null;
 
         RunStats stats = new RunStats();
         long maxCost = 0;
@@ -186,31 +190,41 @@ public class HeapExperiments {
             if (cost > maxCost) maxCost = cost;
         }
 
-        // 3) experiment-specific part
+        // 3) Experiment-specific part
         if (experimentId == 2) {
-            // deleteMin until only 46 elements remain
-            while (heap.size() > 46) {
-                long cost = costOfOpBeforeAfter(heap, heap::deleteMin);
-                if (cost > maxCost) maxCost = cost;
+            // Exp2 (per assignment): delete MAXIMUM using a pointer until size becomes 46.
+            // Keys are 1..n; key 1 was removed by deleteMin above.
+            if (n > EXP2_TARGET_REMAIN) {
+                int k = n;
+                while (heap.size() > EXP2_TARGET_REMAIN) {
+
+                    // Find next existing max key (skip already deleted)
+                    while (k > 0 && (byKey[k] == null || byKey[k].node == null)) {
+                        k--;
+                    }
+                    if (k <= 0) break; // safety (should not happen)
+
+                    Heap.HeapItem victim = byKey[k];
+                    long cost = costOfOpBeforeAfter(heap, () -> heap.delete(victim));
+                    if (cost > maxCost) maxCost = cost;
+
+                    k--;
+                }
             }
         } else if (experimentId == 3) {
-            // Perform floor(0.1n) decreaseKey operations that reduce selected keys to 0
+            // Exp3: floor(0.1n) decreaseKey ops reducing chosen keys to 0, then deleteMin once.
             int m = (int) Math.floor(0.1 * n);
 
-            // We reduce the largest keys: n, n-1, ..., n-m+1 down to 0
-            // (This matches the "reduce max keys to 0" scenario.)
+            // Reduce the largest keys: n, n-1, ..., n-m+1 down to 0
             for (int k = n; k >= n - m + 1; k--) {
                 Heap.HeapItem it = byKey[k];
                 if (it == null) continue;
-
-                // If the item was deleted earlier, your Heap implementation should set it.node = null
-                if (it.node == null) continue;
+                if (it.node == null) continue; // already deleted (shouldn't happen here)
 
                 int diff = it.key; // reduce from current key to 0
                 if (diff <= 0) continue;
 
-                int d = diff;
-                long cost = costOfOpBeforeAfter(heap, () -> heap.decreaseKey(it, d));
+                long cost = costOfOpBeforeAfter(heap, () -> heap.decreaseKey(it, diff));
                 if (cost > maxCost) maxCost = cost;
             }
 
@@ -222,7 +236,7 @@ public class HeapExperiments {
         }
 
         long t1 = System.nanoTime();
-        stats.timeMs = (t1 - t0) / 1_000_000L;
+        stats.timeMs = (t1 - t0) / 1_000_000.0;
 
         // Final metrics to fill the assignment table
         stats.finalSize = heap.size();
@@ -238,7 +252,6 @@ public class HeapExperiments {
     /**
      * Operation cost definition from the assignment:
      * cost(op) = Δlinks + Δcuts + ΔheapifyUp
-     * We compute deltas by reading totals before and after a single operation.
      */
     private static long costOfOpBeforeAfter(Heap heap, Runnable op) {
         long links0 = heap.totalLinks();
@@ -254,7 +267,7 @@ public class HeapExperiments {
         return (links1 - links0) + (cuts1 - cuts0) + (heapify1 - heapify0);
     }
 
-    /** Fisher-Yates shuffle to build a random permutation of 1..n */
+    /** Fisher–Yates shuffle: returns a random permutation of 1..n using the given seed */
     private static int[] makePermutation(int n, long seed) {
         int[] a = new int[n];
         for (int i = 0; i < n; i++) a[i] = i + 1;

@@ -50,7 +50,8 @@ public class Heap
      *
      */
 
-    //Complexity O(1)
+    // Complexity O(1)
+    // Complexity if the Binominal Heap with Disconecting O(log(n))
     public HeapItem insert(int key, String info) 
     {
         //Create the Item first (passing null for node initially to avoid cycle)
