@@ -26,6 +26,8 @@ public class Heap
      * Constructor to initialize an empty heap.
      *
      */
+
+    //Complexity O(1)
     public Heap(boolean lazyMelds, boolean lazyDecreaseKeys)
     {
         this.lazyMelds = lazyMelds;
@@ -47,6 +49,8 @@ public class Heap
      * Insert (key,info) into the heap and return the newly generated HeapNode.
      *
      */
+
+    //Complexity O(1)
     public HeapItem insert(int key, String info) 
     {
         //Create the Item first (passing null for node initially to avoid cycle)
@@ -81,6 +85,8 @@ public class Heap
      * Return the minimal HeapNode, null if empty.
      *
      */
+
+    // Complexity O(1)
     public HeapItem findMin()
     {
         return this.min;
@@ -91,6 +97,8 @@ public class Heap
      * Delete the minimal item.
      *
      */
+
+    // O(log(n)) amortized
     public void deleteMin() {
         if (this.min == null) {
             return;
@@ -180,6 +188,7 @@ public class Heap
     }
 
 
+    // Complexity O(1)
     private void link(HeapNode y, HeapNode x) {
         // For successive linkign only
 
@@ -209,6 +218,8 @@ public class Heap
     }
 
 
+    // R is a number of roots
+    // Complexity O(R + log(n))
     private void successiveLinking() {
         // Put heap-roots to buckets
         HeapNode[] buckets = toBuckets();
@@ -217,6 +228,9 @@ public class Heap
         fromBuckets(buckets);
     }
 
+
+    // R is a number of roots
+    // Complexity O(R + log(n))
     private HeapNode[] toBuckets() {
         // Initialize buckets
         // Initially did with the Phi but then changed to *2 for safety
@@ -274,6 +288,7 @@ public class Heap
     }
 
 
+    // Complexity O(log(n))
     private void fromBuckets(HeapNode[] buckets) {
         // Reset Heap State
         this.min = null;
@@ -324,6 +339,9 @@ public class Heap
      * Decrease the key of x by diff and fix the heap.
      * 
      */
+
+    // If lazyDecreaseKeys = true then O(1)
+    // If lazyDecreaseKeys = false then O(n)
     public void decreaseKey(HeapItem x, int diff) 
     {
         // Checking the rightness of input
@@ -384,6 +402,7 @@ public class Heap
 
 
     //swapping two nodes according to the rules of FORUM
+    // Complexity O(1)
     private void swapItems(HeapNode a, HeapNode b) {
         HeapItem tmp = a.item;
         a.item = b.item;
@@ -398,6 +417,7 @@ public class Heap
     }
 
     //cut node v
+    // Complexity O(1)
     private void cut(HeapNode cutNode) {
         if(cutNode == null) {
             return;
@@ -454,6 +474,8 @@ public class Heap
         }
     }
 
+
+    // Complexity O(1)
     private void addRoot(HeapNode rootToAdd) {
         if(rootToAdd == null) {
             return;
@@ -489,8 +511,7 @@ public class Heap
 
     // we go all the way up until we see unmarked parent node
     // also if the parent is root then we stop (the flag we created)
-
-
+    // Complexity O(1) (amortized)
     private void cascadingCut(HeapNode nodeThatLostChild, boolean wasRootWhenChildWasLost) {
         if(nodeThatLostChild == null) {
             return;
@@ -527,6 +548,8 @@ public class Heap
      * Delete the x from the heap.
      *
      */
+
+    // O(log(n)) amortized
     public void delete(HeapItem x) 
     {
         //I assume that all value in Heaps are positive numbers or == 0 (written in forum)
@@ -560,6 +583,9 @@ public class Heap
      * pre: heap2.lazyMelds = this.lazyMelds AND heap2.lazyDecreaseKeys = this.lazyDecreaseKeys
      *
      */
+
+    // If lazyMelds = true then O(1)
+    // If lazyMelds = false then O(n)
     public void meld(Heap heap2)
     {
         // Checking if heap2 is empty or null
@@ -634,6 +660,8 @@ public class Heap
      * Return the number of elements in the heap
      *   
      */
+
+    // Complexity: O(1)
     public int size()
     {
         return size;
@@ -645,6 +673,8 @@ public class Heap
      * Return the number of trees in the heap.
      * 
      */
+
+    // Complexity: O(1)
     public int numTrees()
     {
         return this.numTrees;
@@ -656,6 +686,8 @@ public class Heap
      * Return the number of marked nodes in the heap.
      * 
      */
+
+    // Complexity: O(1)
     public int numMarkedNodes()
     {
         return this.markedNodes;
@@ -667,6 +699,8 @@ public class Heap
      * Return the total number of links.
      * 
      */
+
+    // Complexity: O(1)
     public int totalLinks()
     {
         return this.linksCount;
@@ -678,6 +712,8 @@ public class Heap
      * Return the total number of cuts.
      * 
      */
+
+    // Complexity: O(1)
     public int totalCuts()
     {
         return this.cutsCount;
@@ -689,6 +725,8 @@ public class Heap
      * Return the total heapify costs.
      * 
      */
+
+    // Complexity: O(1)
     public int totalHeapifyCosts()
     {
         return this.heapifyCostCount;
