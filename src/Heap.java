@@ -50,8 +50,8 @@ public class Heap
      *
      */
 
-    // Complexity O(1)
-    // Complexity if the Binominal Heap with Disconecting O(log(n))
+    // If lazyMelds = true then O(1)
+    // If lazyMelds = false then O(log(n))
     public HeapItem insert(int key, String info) 
     {
         //Create the Item first (passing null for node initially to avoid cycle)
@@ -219,8 +219,7 @@ public class Heap
     }
 
 
-    // R is a number of roots
-    // Complexity O(R + log(n))
+    // Complexity O(log(n))
     private void successiveLinking() {
         // Put heap-roots to buckets
         HeapNode[] buckets = toBuckets();
@@ -230,8 +229,7 @@ public class Heap
     }
 
 
-    // R is a number of roots
-    // Complexity O(R + log(n))
+    // Complexity O(log(n))
     private HeapNode[] toBuckets() {
         // Initialize buckets
         // Initially did with the Phi but then changed to *2 for safety
@@ -342,7 +340,7 @@ public class Heap
      */
 
     // If lazyDecreaseKeys = true then O(1)
-    // If lazyDecreaseKeys = false then O(n)
+    // If lazyDecreaseKeys = false then O(log(n))
     public void decreaseKey(HeapItem x, int diff) 
     {
         // Checking the rightness of input
@@ -550,7 +548,7 @@ public class Heap
      *
      */
 
-    // O(log(n)) amortized
+    // Complexity: O(log(n)) amortized
     public void delete(HeapItem x) 
     {
         //I assume that all value in Heaps are positive numbers or == 0 (written in forum)
@@ -586,7 +584,7 @@ public class Heap
      */
 
     // If lazyMelds = true then O(1)
-    // If lazyMelds = false then O(n)
+    // If lazyMelds = false then O(log(n))
     public void meld(Heap heap2)
     {
         // Checking if heap2 is empty or null
