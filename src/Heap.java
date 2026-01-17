@@ -488,7 +488,7 @@ public class Heap
             return;
         }
 
-        HeapNode rootListHead = this.min.node; //min easier to find could be anu node
+        HeapNode rootListHead = this.min.node; //min easier to find could be any node
         HeapNode rootListTail = rootListHead.prev; //last root in teh circular list
 
         //now we want to insert our new Root in between
