@@ -63,7 +63,7 @@ public class Heap
      */
 
     // If lazyMelds = true then O(1)
-    // If lazyMelds = false then O(log(n)) and Worst Case O(n) (in case almost each node is a singleton-heap)
+    // If lazyMelds = false then O(log(n)) and Worst Case O(n) (in case almost each node is a singleton-tree)
     public HeapItem insert(int key, String info) 
     {
         //Create the Item first (passing null for node initially to avoid cycle)
