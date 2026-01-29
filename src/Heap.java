@@ -1,3 +1,15 @@
+/**
+ * Project 2: Advanced Heaps
+ * * Student 1:
+ * Name: Nickolai Makaronok
+ * ID: 345682645
+ * Username: mikalaim
+ * * Student 2:
+ * Name: Tal Samson
+ * ID: 213122625
+ * Username: talsamson
+ */
+
 import java.lang.Math;
 /**
  * Heap
@@ -51,7 +63,7 @@ public class Heap
      */
 
     // If lazyMelds = true then O(1)
-    // If lazyMelds = false then O(log(n))
+    // If lazyMelds = false then O(log(n)) and Worst Case O(n) (in case almost each node is a singleton-heap)
     public HeapItem insert(int key, String info) 
     {
         //Create the Item first (passing null for node initially to avoid cycle)
@@ -100,6 +112,7 @@ public class Heap
      */
 
     // O(log(n)) amortized
+    // Worst Case Complexity: O(n)
     public void deleteMin() {
         if (this.min == null) {
             return;
@@ -219,7 +232,8 @@ public class Heap
     }
 
 
-    // Complexity O(log(n))
+    // Complexity O(log(n)) amortized
+    // Worst Case Complexity: O(n) in case when almost each node is a singleton
     private void successiveLinking() {
         // Put heap-roots to buckets
         HeapNode[] buckets = toBuckets();
@@ -230,6 +244,7 @@ public class Heap
 
 
     // Complexity O(log(n))
+    // Worst Case Complexity: O(n)
     private HeapNode[] toBuckets() {
         // Initialize buckets
         // Initially did with the Phi but then changed to *2 for safety
@@ -287,7 +302,8 @@ public class Heap
     }
 
 
-    // Complexity O(log(n))
+    // Complexity O(log(n)) amortized and worst
+
     private void fromBuckets(HeapNode[] buckets) {
         // Reset Heap State
         this.min = null;
@@ -339,7 +355,9 @@ public class Heap
      * 
      */
 
-    // If lazyDecreaseKeys = true then O(1)
+    // If lazyDecreaseKeys = true:
+    //   - If lazyMelds = true: O(1) amortized, O(log n) worst case (Fibonacci heap)
+    //   - If lazyMelds = false: O(log n) worst case (successive linking after each cut)
     // If lazyDecreaseKeys = false then O(log(n))
     public void decreaseKey(HeapItem x, int diff) 
     {
@@ -511,6 +529,7 @@ public class Heap
     // we go all the way up until we see unmarked parent node
     // also if the parent is root then we stop (the flag we created)
     // Complexity O(1) (amortized)
+    // Worst Case Complexity: O(log(n))
     private void cascadingCut(HeapNode nodeThatLostChild, boolean wasRootWhenChildWasLost) {
         if(nodeThatLostChild == null) {
             return;
@@ -549,6 +568,7 @@ public class Heap
      */
 
     // Complexity: O(log(n)) amortized
+    // Worst Case Complexity: O(n)
     public void delete(HeapItem x) 
     {
         //I assume that all value in Heaps are positive numbers or == 0 (written in forum)
@@ -584,7 +604,8 @@ public class Heap
      */
 
     // If lazyMelds = true then O(1)
-    // If lazyMelds = false then O(log(n))
+    // If lazyMelds = false then O(log(n)) amortized
+    // Worst Case: O(n)
     public void meld(Heap heap2)
     {
         // Checking if heap2 is empty or null
